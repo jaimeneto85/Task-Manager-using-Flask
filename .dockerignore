@@ -1,0 +1,13 @@
+.git
+.pytest_cache
+.sonarproject.properties
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+output/
+tests/
+requirements-dev.txt
+pytest.ini
+README.md
+LICENSE
