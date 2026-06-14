@@ -1,0 +1,10 @@
+{
+  "name": "Task-Manager-using-Flask",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {},
+  "postCreateCommand": "pip install -r requirements.txt -r requirements-dev.txt",
+  "remoteUser": "root"
+}

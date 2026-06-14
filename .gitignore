@@ -137,3 +137,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 todo_project/todo_project/site.db
+
+# Generated security-scan reports (OWASP ZAP / Dependency-Check)
+report_*.html
+report_*.json
+report_*.md
+zap.yaml
+reports/

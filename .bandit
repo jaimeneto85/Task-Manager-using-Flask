@@ -1,0 +1,8 @@
+[bandit]
+# Bandit configuration for the Task-Manager-using-Flask project.
+# Auto-loaded when running `bandit -r .` from the repository root.
+
+# Directories excluded from the security scan (comma-separated, no spaces).
+# Tests are excluded because assert statements (B101) are expected there,
+# and the remaining paths contain no first-party Python source code.
+exclude = ./todo_project/tests,./todo_project/todo_project/static,./.git,./.pytest_cache,./.devcontainer,./output
