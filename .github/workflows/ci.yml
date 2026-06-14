@@ -125,14 +125,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # full history + tags so `git describe` works
+      - name: Resolve version from git
+        id: version
+        run: echo "version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
       - name: Deploy
         env:
           APP_ENV: development
+          APP_VERSION: ${{ steps.version.outputs.version }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DATABASE_URI: ${{ secrets.DATABASE_URI }}
         run: |
-          echo "Deploying ${GITHUB_SHA::7} to DEVELOPMENT (APP_ENV=$APP_ENV)"
-          echo "TODO: replace with the real deploy command."
+          echo "Deploying version $APP_VERSION (${GITHUB_SHA::7}) to DEVELOPMENT (APP_ENV=$APP_ENV)"
+          echo "TODO: docker build --build-arg APP_VERSION=$APP_VERSION -t <registry>/task-manager:$APP_VERSION . ; then push & update the service."
 
   deploy-staging:
     name: Deploy to Staging
@@ -143,14 +149,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # full history + tags so `git describe` works
+      - name: Resolve version from git
+        id: version
+        run: echo "version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
       - name: Deploy
         env:
           APP_ENV: staging
+          APP_VERSION: ${{ steps.version.outputs.version }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DATABASE_URI: ${{ secrets.DATABASE_URI }}
         run: |
-          echo "Deploying ${GITHUB_SHA::7} to STAGING (APP_ENV=$APP_ENV)"
-          echo "TODO: replace with the real deploy command."
+          echo "Deploying version $APP_VERSION (${GITHUB_SHA::7}) to STAGING (APP_ENV=$APP_ENV)"
+          echo "TODO: docker build --build-arg APP_VERSION=$APP_VERSION -t <registry>/task-manager:$APP_VERSION . ; then push & update the service."
 
   deploy-production:
     name: Deploy to Production
@@ -161,11 +173,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # full history + tags so `git describe` works
+      - name: Resolve version from git
+        id: version
+        run: echo "version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
       - name: Deploy
         env:
           APP_ENV: production
+          APP_VERSION: ${{ steps.version.outputs.version }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DATABASE_URI: ${{ secrets.DATABASE_URI }}
         run: |
-          echo "Deploying ${GITHUB_SHA::7} to PRODUCTION (APP_ENV=$APP_ENV)"
-          echo "TODO: replace with the real deploy command."
+          echo "Deploying version $APP_VERSION (${GITHUB_SHA::7}) to PRODUCTION (APP_ENV=$APP_ENV)"
+          echo "TODO: docker build --build-arg APP_VERSION=$APP_VERSION -t <registry>/task-manager:$APP_VERSION . ; then push & update the service."

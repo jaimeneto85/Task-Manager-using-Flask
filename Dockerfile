@@ -1,6 +1,10 @@
 # Application image used by docker-compose for the monitored runtime.
 FROM python:3.12-slim-bullseye
 
+# Version stamped at build time: docker build --build-arg APP_VERSION=$(git describe --tags)
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+
 WORKDIR /app
 
 # Install dependencies first for better layer caching.

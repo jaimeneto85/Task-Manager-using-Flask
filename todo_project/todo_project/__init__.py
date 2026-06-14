@@ -32,7 +32,10 @@ bcrypt = Bcrypt(app)
 # Prometheus instrumentation: auto-tracks HTTP request count/latency/exceptions and
 # exposes them at GET /metrics for Prometheus to scrape.
 metrics = PrometheusMetrics(app)
-metrics.info('app_info', 'Task Manager application', version='1.0.0')
+# Version is stamped at build time via APP_VERSION (e.g. `git describe --tags`);
+# falls back to "dev" for local or un-tagged runs.
+metrics.info('app_info', 'Task Manager application',
+             version=os.environ.get('APP_VERSION', 'dev'))
 
 # Always put Routes at end
 from todo_project import routes
