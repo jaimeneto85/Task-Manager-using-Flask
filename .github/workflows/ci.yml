@@ -26,7 +26,17 @@ jobs:
         run: devcontainer up --workspace-folder .
 
       - name: Run tests inside devcontainer
-        run: devcontainer exec --workspace-folder . python -m pytest --cov-report=xml
+        run: devcontainer exec --workspace-folder . python -m pytest --cov-report=xml --junitxml=test-report.xml --html=test-report.html --self-contained-html
+
+      - name: Upload test & coverage reports
+        if: always()  # publish the report even when a test fails
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: |
+            test-report.html
+            test-report.xml
+            coverage.xml
 
       - name: Run Bandit security scan
         # SAST for Python. Auto-loads the .bandit config (tests excluded) and

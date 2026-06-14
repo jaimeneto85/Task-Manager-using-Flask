@@ -50,5 +50,12 @@ def auth_client(client, make_user):
 
 
 def pytest_unconfigure(config):
+    # Release the pooled SQLite connection so the temp DB file can be deleted on
+    # Windows, where an open handle would otherwise block removal (WinError 32).
+    with flask_app.app_context():
+        db.engine.dispose()
     if os.path.exists(_db_path):
-        os.remove(_db_path)
+        try:
+            os.remove(_db_path)
+        except OSError:
+            pass
