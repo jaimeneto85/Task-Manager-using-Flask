@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: ['**']
 
+permissions:
+  contents: read
+  packages: write          # allow the CD jobs to push images to GHCR
+
 jobs:
   build:
     name: Tests, Bandit Security Scan
@@ -80,8 +84,7 @@ jobs:
     name: OWASP ZAP (DAST)
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      issues: write  # let the ZAP action open/update a GitHub issue with the findings
+      contents: read         # issue writing is disabled, so no issues:write needed
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -121,82 +124,32 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   # ============================================================================
-  # Deployment jobs — one per environment, gated by the pushed branch.
-  # Each binds a GitHub Environment (repo Settings > Environments) which holds
-  # the environment-scoped secrets (SECRET_KEY, DATABASE_URI) and protection
-  # rules (e.g. required reviewers on `production`). Create those Environments
-  # in the repo settings before the first deploy. The deploy step itself is a
-  # placeholder — drop your real deploy command (build & push image, update the
-  # running service, etc.) where indicated.
+  # Continuous Delivery — one job per environment, gated by the pushed branch.
+  # Each calls the reusable deploy workflow (.github/workflows/deploy.yml), which
+  # builds the versioned image, pushes it to GHCR, and rolls it out. The
+  # environment binds GitHub Environment protection (e.g. a required reviewer on
+  # `production`) + the scoped secrets (SECRET_KEY, DATABASE_URI).
   # ============================================================================
   deploy-development:
-    name: Deploy to Development
     needs: [build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/development'
-    runs-on: ubuntu-latest
-    environment: development
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0          # full history + tags so `git describe` works
-      - name: Resolve version from git
-        id: version
-        run: echo "version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
-      - name: Deploy
-        env:
-          APP_ENV: development
-          APP_VERSION: ${{ steps.version.outputs.version }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DATABASE_URI: ${{ secrets.DATABASE_URI }}
-        run: |
-          echo "Deploying version $APP_VERSION (${GITHUB_SHA::7}) to DEVELOPMENT (APP_ENV=$APP_ENV)"
-          echo "TODO: docker build --build-arg APP_VERSION=$APP_VERSION -t <registry>/task-manager:$APP_VERSION . ; then push & update the service."
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: development
+    secrets: inherit
 
   deploy-staging:
-    name: Deploy to Staging
     needs: [build, dependency-check, zap-dast]
     if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0          # full history + tags so `git describe` works
-      - name: Resolve version from git
-        id: version
-        run: echo "version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
-      - name: Deploy
-        env:
-          APP_ENV: staging
-          APP_VERSION: ${{ steps.version.outputs.version }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DATABASE_URI: ${{ secrets.DATABASE_URI }}
-        run: |
-          echo "Deploying version $APP_VERSION (${GITHUB_SHA::7}) to STAGING (APP_ENV=$APP_ENV)"
-          echo "TODO: docker build --build-arg APP_VERSION=$APP_VERSION -t <registry>/task-manager:$APP_VERSION . ; then push & update the service."
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+    secrets: inherit
 
   deploy-production:
-    name: Deploy to Production
     needs: [build, dependency-check, zap-dast]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0          # full history + tags so `git describe` works
-      - name: Resolve version from git
-        id: version
-        run: echo "version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
-      - name: Deploy
-        env:
-          APP_ENV: production
-          APP_VERSION: ${{ steps.version.outputs.version }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DATABASE_URI: ${{ secrets.DATABASE_URI }}
-        run: |
-          echo "Deploying version $APP_VERSION (${GITHUB_SHA::7}) to PRODUCTION (APP_ENV=$APP_ENV)"
-          echo "TODO: docker build --build-arg APP_VERSION=$APP_VERSION -t <registry>/task-manager:$APP_VERSION . ; then push & update the service."
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+    secrets: inherit
