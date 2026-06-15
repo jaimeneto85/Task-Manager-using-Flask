@@ -26,6 +26,29 @@ def error_500(error):
     return (render_template('errors/500.html'), 500)
 
 
+@app.after_request
+def set_security_headers(response):
+    """Attach HTTP security headers to every response (addresses OWASP ZAP findings).
+
+    script-src is strict ('self') since all JS is served from /static; style-src allows
+    'unsafe-inline' because Bootstrap applies inline styles at runtime. COEP require-corp
+    works because every response (including /static) carries CORP same-origin.
+    """
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; font-src 'self'; object-src 'none'; "
+        "base-uri 'self'; frame-ancestors 'none'"
+    )
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=(), payment=()'
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    response.headers['Cross-Origin-Resource-Policy'] = 'same-origin'
+    return response
+
+
 @app.route("/")
 @app.route("/about")
 def about():
