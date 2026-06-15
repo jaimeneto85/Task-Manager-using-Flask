@@ -109,12 +109,15 @@ jobs:
       - name: ZAP Baseline Scan
         # Runs the ZAP CLI (zap-baseline.py) from the official ghcr.io/zaproxy/zaproxy
         # image against the running app (the action uses --network=host, so localhost works).
-        # fail_action=false: report findings (HTML/JSON/MD report uploaded as the "zap_scan"
-        # artifact + a GitHub issue) WITHOUT failing the build. Set it to true for a hard gate.
+        # fail_action=false: report findings (HTML/JSON/MD uploaded as the "zap_scan"
+        # artifact) WITHOUT failing the build. Set it to true for a hard gate.
+        # allow_issue_writing=false: this repo has Issues disabled, so skip issue creation
+        # (otherwise the action errors with HTTP 410 after a successful scan).
         uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'http://localhost:5000'
           fail_action: false
+          allow_issue_writing: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
   # ============================================================================
